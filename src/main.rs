@@ -8,7 +8,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;
 use std::error::Error;
 use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncWriteExt};
 
 
 #[tokio::main]
@@ -58,28 +58,31 @@ fn create_progress_bar(quiet_mode: bool, msg: &str, length: Option<u64>) -> Prog
 
 async fn download(url: &str) -> Result<(), Box<dyn Error>> {
     let client = Client::new();
-
-    let response = client.get(url).send().await?;
-
-    println!("Status: {}", response.status());
-    if let Some(content_length) = response.content_length(){
-        println!("Content-Length: {} bytes", content_length);
-    }else{
-        println!("Content-Length: Unknown");
-    }
-    // dbg!(response);
-
-    let body = response.text().await?;
+    let mut response = client.get(url).send().await?;
     
-    let mut filename = url.split('/').last().unwrap_or("index.html").to_string();
+    println!("Status: {}", response.status());
 
+    let content_length = response.content_length();
+    let quiet_mode = false;
+    let bar = create_progress_bar(quiet_mode, "Downloading...", content_length);
+
+    // Set filename
+    let mut filename = url.split('/').last().unwrap_or("index.html").to_string();
     if !filename.ends_with(".html") {
         filename.push_str(".html");
     }
 
-    let mut file = File::create(filename.clone()).await?;
-    file.write_all(body.as_bytes()).await?;
-    println!("File Saved: {}", filename);
+    let mut file = File::create(&filename).await?;
+    let mut downloaded: u64 = 0;
 
-    Ok(())    
+    while let Some(chunk) = response.chunk().await? {
+        file.write_all(&chunk).await?;
+        downloaded += chunk.len() as u64;
+        bar.set_position(downloaded);
+    }
+
+    bar.finish_with_message("Download complete!");
+    println!("File Saved: {}", filename);
+    
+    Ok(())
 }
