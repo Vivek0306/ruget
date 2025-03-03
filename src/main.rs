@@ -7,6 +7,8 @@ use clap::{Arg, App};
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;
 use std::error::Error;
+use std::path::Path;
+use tokio::fs;
 use tokio::fs::File;
 use tokio::io::{AsyncWriteExt};
 
@@ -83,7 +85,16 @@ async fn download(url: &str, filename: &str) -> Result<(), Box<dyn Error>> {
     let quiet_mode = false;
     let bar = create_progress_bar(quiet_mode, "Downloading...", content_length);
 
-    let mut file = File::create(filename).await?;
+    // Ensure 'files' directory exists
+    let folder_path = "files";
+    if !Path::new(folder_path).exists() {
+        fs::create_dir_all(folder_path).await?;
+    }
+
+    // Prepend 'files/' to filename
+    let file_path = format!("{}/{}", folder_path, filename);
+    
+    let mut file = File::create(&file_path).await?;
     let mut downloaded: u64 = 0;
 
     while let Some(chunk) = response.chunk().await? {
@@ -93,7 +104,7 @@ async fn download(url: &str, filename: &str) -> Result<(), Box<dyn Error>> {
     }
 
     bar.finish_with_message("Download complete!");
-    println!("File Saved: {}", filename);
+    println!("File Saved: {}", file_path);
     
     Ok(())
 }
