@@ -22,13 +22,29 @@ async fn main() {
             .long("url")
             .required(true)
             .takes_value(true)
-            .help("URL to be fetched!")
+            .help("URL to be fetched.")
+        )
+        .arg(Arg::with_name("OUTPUT")
+            .short("o")
+            .long("output")
+            .required(false)
+            .takes_value(true)
+            .help("Specify output filename.")
         )
         .get_matches();
 
     let url = matches.value_of("URL").unwrap();
 
-    if let Err(e) = download(url).await {
+    let mut filename = matches.value_of("OUTPUT").map(String::from).unwrap_or_else(|| {
+        let name = url.trim_end_matches('/').split('/').last().unwrap_or("index.html").to_string();
+        name
+    });
+
+    if !filename.ends_with(".html"){
+        filename.push_str(".html")
+    }
+
+    if let Err(e) = download(url, &filename).await {
         eprintln!("Error: {}", e);
     }
 
@@ -56,7 +72,7 @@ fn create_progress_bar(quiet_mode: bool, msg: &str, length: Option<u64>) -> Prog
     bar
 }
 
-async fn download(url: &str) -> Result<(), Box<dyn Error>> {
+async fn download(url: &str, filename: &str) -> Result<(), Box<dyn Error>> {
     let client = Client::new();
     let mut response = client.get(url).send().await?;
     
@@ -66,13 +82,7 @@ async fn download(url: &str) -> Result<(), Box<dyn Error>> {
     let quiet_mode = false;
     let bar = create_progress_bar(quiet_mode, "Downloading...", content_length);
 
-    // Set filename
-    let mut filename = url[0..url.len()-1].split('/').last().unwrap_or("index.html").to_string();
-    if !filename.ends_with(".html") {
-        filename.push_str(".html");
-    }
-
-    let mut file = File::create(&filename).await?;
+    let mut file = File::create(filename).await?;
     let mut downloaded: u64 = 0;
 
     while let Some(chunk) = response.chunk().await? {
