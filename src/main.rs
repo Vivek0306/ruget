@@ -40,7 +40,8 @@ async fn main() {
         name
     });
 
-    if !filename.ends_with(".html"){
+    if filename.contains("."){
+    }else{
         filename.push_str(".html")
     }
 
