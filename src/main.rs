@@ -67,7 +67,7 @@ async fn download(url: &str) -> Result<(), Box<dyn Error>> {
     let bar = create_progress_bar(quiet_mode, "Downloading...", content_length);
 
     // Set filename
-    let mut filename = url.split('/').last().unwrap_or("index.html").to_string();
+    let mut filename = url[0..url.len()-1].split('/').last().unwrap_or("index.html").to_string();
     if !filename.ends_with(".html") {
         filename.push_str(".html");
     }
