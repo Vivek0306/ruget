@@ -33,6 +33,13 @@ async fn main() {
             .takes_value(true)
             .help("Specify output filename.")
         )
+        .arg(Arg::with_name("QUIET")
+            .short("q")
+            .long("quiet")
+            .required(false)
+            .takes_value(false)
+            .help("Silence the download notifications.")
+        )
         .get_matches();
 
     let url = matches.value_of("URL").unwrap();
@@ -53,8 +60,9 @@ async fn main() {
         }
     }
 
-    print!("{}", &filename);
-    if let Err(e) = download(url, &filename).await {
+    let quiet_mode = matches.is_present("QUIET");
+
+    if let Err(e) = download(url, &filename, quiet_mode).await {
         eprintln!("Error: {}", e);
     }
 
@@ -82,14 +90,14 @@ fn create_progress_bar(quiet_mode: bool, msg: &str, length: Option<u64>) -> Prog
     bar
 }
 
-async fn download(url: &str, filename: &str) -> Result<(), Box<dyn Error>> {
+async fn download(url: &str, filename: &str, quiet: bool) -> Result<(), Box<dyn Error>> {
     let client = Client::new();
     let mut response = client.get(url).send().await?;
     
     println!("Status: {}", response.status());
 
     let content_length = response.content_length();
-    let quiet_mode = false;
+    let quiet_mode = quiet;
     let bar = create_progress_bar(quiet_mode, "Downloading...", content_length);
 
     // Ensure 'files' directory exists
