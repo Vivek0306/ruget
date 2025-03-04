@@ -42,11 +42,18 @@ async fn main() {
         name
     });
 
-    if filename.contains("."){
-    }else{
-        filename.push_str(".html")
+
+    if let Some(output) = matches.value_of("OUTPUT"){
+        if !output.contains("."){
+            if let Some(ext) = url.trim_end_matches("/").split('.').last(){
+                filename.push_str(&format!(".{}", ext));
+            }
+        }else if !filename.contains('.'){
+            filename.push_str(".html")
+        }
     }
 
+    print!("{}", &filename);
     if let Err(e) = download(url, &filename).await {
         eprintln!("Error: {}", e);
     }
