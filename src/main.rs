@@ -15,10 +15,10 @@ use tokio::io::{AsyncWriteExt};
 
 #[tokio::main]
 async fn main() {
-    let matches = App::new("Ru_get")
+    let matches = App::new("ruget")
         .version("0.1.0")
         .author("Vivek Nair <vivekmanju53@gmail.com>")
-        .about("wget but written in Rust")
+        .about("wget but written in Rust :)")
         .arg(Arg::with_name("URL")
             .short("u")
             .long("url")
