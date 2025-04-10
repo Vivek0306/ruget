@@ -36,6 +36,22 @@ This will download and compile the project, making the `ruget` command available
 
 4. You can now run `ruget` using the path to the binary, or move it to a directory in your `PATH`.
 
+### Installation via Makefile (Recommended)
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/Vivek0306/ruget.git
+   ```
+
+2. Install ruget globally (requires sudo):
+  
+   ```bash
+   make install
+   ```
+3. You can now run `ruget` directly in your terminal.
+
+
 ## Usage
 
 ### Basic Usage
